@@ -289,6 +289,38 @@
             box-shadow: 0 8px 26px rgba(105, 89, 215, .09);
         }
 
+        .composer-settings {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 2px 0 8px;
+        }
+
+        .composer-settings select, .composer-settings input, .upload-button {
+            min-height: 32px;
+            padding: 0 9px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #fff;
+            color: #495166;
+            font-size: 11px;
+        }
+
+        .composer-settings input[type="text"] { width: min(210px, 42vw); }
+        .upload-button { cursor: pointer; display: inline-flex; align-items: center; }
+        .upload-button:hover { border-color: #d3cffa; }
+        .upload-status { flex: 1 1 100%; color: var(--muted); font-size: 11px; }
+        .document-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .document-item { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; }
+        .document-remove {
+            border: 0;
+            background: transparent;
+            color: #a44;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
         .composer textarea {
             width: 100%;
             min-height: 34px;
@@ -410,9 +442,9 @@
                 </div>
             </div>
             <div class="topbar-actions">
-                <div class="status" title="Answers run on your computer">
+                <div class="status" id="provider-status" title="Select a local or online AI provider">
                     <span class="status-dot" aria-hidden="true"></span>
-                    Local AI · private
+                    <span id="provider-status-text">Local Ollama</span>
                 </div>
                 <button class="new-chat-button" id="new-chat" type="button" aria-label="Start a new chat">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -433,7 +465,7 @@
                         </svg>
                     </div>
                     <h1>Hi there. What can I help with?</h1>
-                    <p>Ask a question in your own words. I can help with technology, learning, and information in my FAQ.</p>
+                    <p>Ask a question in your own words. I can help with learning and search your FAQ or uploaded documents.</p>
                     <div class="suggestions" aria-label="Try asking">
                         <button class="suggestion" type="button" data-prompt="Could you explain cloud computing in simple words?">
                             <span class="suggestion-icon" aria-hidden="true">
@@ -466,6 +498,21 @@
 
             <section class="composer-area" aria-label="Write a message">
                 <form class="composer" id="chat-form">
+                    <div class="composer-settings">
+                        <label class="visually-hidden" for="model-provider">AI provider</label>
+                        <select id="model-provider" aria-label="AI provider">
+                            <option value="ollama" data-model="{{ ollama_model }}" {% if default_provider == "ollama" %}selected{% endif %}>Local Ollama</option>
+                            <option value="gemini" data-model="{{ gemini_model }}" {% if not gemini_available %}disabled{% endif %} {% if default_provider == "gemini" %}selected{% endif %}>Google Gemini{% if not gemini_available %} (configure API key){% endif %}</option>
+                            <option value="openai" data-model="{{ openai_model }}" {% if not openai_available %}disabled{% endif %} {% if default_provider == "openai" %}selected{% endif %}>OpenAI GPT{% if not openai_available %} (configure API key){% endif %}</option>
+                        </select>
+                        <label class="visually-hidden" for="model-name">Model name</label>
+                        <input id="model-name" type="text" value="{{ ollama_model }}" maxlength="120" aria-label="Model name">
+                        <label class="upload-button" for="document-files">Add documents</label>
+                        <input id="document-files" type="file" multiple hidden accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.ppt,.pptx,.xls,.xlsx">
+                        <button class="upload-button" id="upload-documents" type="button">Upload</button>
+                        <span class="upload-status" id="upload-status" role="status" aria-live="polite"></span>
+                        <div class="document-list" id="document-list" aria-label="Uploaded documents"></div>
+                    </div>
                     <label class="visually-hidden" for="user-input-text">Your message</label>
                     <textarea id="user-input-text" name="user_input" rows="1" maxlength="2000" placeholder="Message {{ bot_name }}..." autocomplete="off" required></textarea>
                     <div class="composer-actions">
@@ -477,7 +524,7 @@
                         </button>
                     </div>
                 </form>
-                <p class="privacy-note">Answers are generated locally. AI can make mistakes, so check important information.</p>
+                <p class="privacy-note">Choose local Ollama or an online provider. Online providers receive your question and retrieved document excerpts. Check important information.</p>
             </section>
         </main>
 
@@ -494,6 +541,13 @@
         const messages = document.getElementById('messages');
         const welcome = document.getElementById('welcome');
         const newChatButton = document.getElementById('new-chat');
+        const providerSelect = document.getElementById('model-provider');
+        const modelInput = document.getElementById('model-name');
+        const providerStatusText = document.getElementById('provider-status-text');
+        const documentFiles = document.getElementById('document-files');
+        const uploadButton = document.getElementById('upload-documents');
+        const uploadStatus = document.getElementById('upload-status');
+        const documentList = document.getElementById('document-list');
         const botName = {{ bot_name | tojson }};
         const HISTORY_STORAGE_KEY = 'pramana-current-conversation';
         const MAX_CONTEXT_MESSAGES = 40;
@@ -501,6 +555,18 @@
         const MAX_SAVED_MESSAGES = 100;
         let conversationHistory = loadConversationHistory();
         let isSending = false;
+        let isUploading = false;
+
+        function updateModelName() {
+            const option = providerSelect.selectedOptions[0];
+            modelInput.value = option.dataset.model || '';
+            providerStatusText.textContent = providerSelect.value === 'ollama'
+                ? 'Local Ollama'
+                : 'Online provider';
+        }
+
+        providerSelect.addEventListener('change', updateModelName);
+        updateModelName();
 
         const assistantIcon = `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -666,7 +732,9 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
                     body: new URLSearchParams({
                         user_input: message,
-                        conversation_history: JSON.stringify(recentConversationContext())
+                        conversation_history: JSON.stringify(recentConversationContext()),
+                        provider: providerSelect.value,
+                        model: modelInput.value.trim()
                     })
                 });
                 const data = await response.json();
@@ -699,6 +767,82 @@
         chatForm.addEventListener('submit', event => {
             event.preventDefault();
             sendMessage(messageInput.value.trim());
+        });
+
+        async function refreshDocuments() {
+            const response = await fetch('/api/documents');
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Could not list documents.');
+            documentList.replaceChildren();
+            data.documents.forEach(uploadedDocument => {
+                const item = document.createElement('span');
+                item.className = 'document-item';
+                item.textContent = `${uploadedDocument.filename} (${uploadedDocument.chunks})`;
+                const remove = document.createElement('button');
+                remove.className = 'document-remove';
+                remove.type = 'button';
+                remove.textContent = 'Remove';
+                remove.setAttribute('aria-label', `Remove ${uploadedDocument.filename}`);
+                remove.addEventListener('click', async () => {
+                    try {
+                        const result = await fetch(`/api/documents/${encodeURIComponent(uploadedDocument.document_id)}`, { method: 'DELETE' });
+                        const responseData = await result.json();
+                        if (!result.ok) throw new Error(responseData.error || 'Could not remove document.');
+                        await refreshDocuments();
+                    } catch (error) {
+                        uploadStatus.textContent = error instanceof Error ? error.message : 'Could not remove document.';
+                    }
+                });
+                item.appendChild(remove);
+                documentList.appendChild(item);
+            });
+        }
+
+        async function uploadSelectedDocuments() {
+            const files = Array.from(documentFiles.files || []);
+            if (!files.length || isUploading) return;
+            if (files.length > 5) {
+                uploadStatus.textContent = 'Select no more than 5 files per upload.';
+                return;
+            }
+            if (files.some(file => file.size > 2 * 1024 * 1024)) {
+                uploadStatus.textContent = 'Each file must be 2 MB or smaller.';
+                return;
+            }
+            isUploading = true;
+            uploadButton.disabled = true;
+            uploadStatus.textContent = 'Uploading documents...';
+            try {
+                const formData = new FormData();
+                files.forEach(file => formData.append('files', file));
+                const start = await fetch('/api/uploads', { method: 'POST', body: formData });
+                const started = await start.json();
+                if (!start.ok) throw new Error(started.error || 'Upload could not start.');
+                let job;
+                do {
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                    const poll = await fetch(`/api/uploads/${encodeURIComponent(started.job_id)}`);
+                    job = await poll.json();
+                    if (!poll.ok) throw new Error(job.error || 'Upload status could not be checked.');
+                    uploadStatus.textContent = `Document indexing: ${job.status}...`;
+                } while (job.status === 'queued' || job.status === 'processing');
+                if (job.status === 'failed') throw new Error(job.error);
+                const imported = job.result.imported.length;
+                const errors = job.result.errors || [];
+                uploadStatus.textContent = `${imported} document(s) indexed.${errors.length ? ` ${errors.length} failed: ${errors.map(item => `${item.filename}: ${item.error}`).join('; ')}` : ''}`;
+                await refreshDocuments();
+                documentFiles.value = '';
+            } catch (error) {
+                uploadStatus.textContent = error instanceof Error ? error.message : 'Document upload failed.';
+            } finally {
+                isUploading = false;
+                uploadButton.disabled = false;
+            }
+        }
+
+        uploadButton.addEventListener('click', uploadSelectedDocuments);
+        refreshDocuments().catch(error => {
+            uploadStatus.textContent = error instanceof Error ? error.message : 'Could not list uploaded documents.';
         });
 
         messageInput.addEventListener('input', () => {

@@ -47,3 +47,15 @@ APP_HOST = os.environ.get("PRAMANA_HOST", "127.0.0.1")
 APP_PORT = int(os.environ.get("PRAMANA_PORT", "5001"))
 BOT_NAME = os.environ.get("PRAMANA_BOT_NAME", "Pramana")
 BOT_TAGLINE = os.environ.get("PRAMANA_BOT_TAGLINE", "Evidence-grounded local AI")
+DEFAULT_PROVIDER = os.environ.get("PRAMANA_DEFAULT_PROVIDER", "ollama").casefold()
+if DEFAULT_PROVIDER not in {"ollama", "gemini", "openai"}:
+    raise ValueError("PRAMANA_DEFAULT_PROVIDER must be ollama, gemini, or openai.")
+GEMINI_API_KEY = os.environ.get("PRAMANA_GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("PRAMANA_GEMINI_MODEL", "gemini-2.5-flash")
+OPENAI_API_KEY = os.environ.get("PRAMANA_OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("PRAMANA_OPENAI_MODEL", "gpt-4.1-mini")
+VECTOR_INDEX_DIR = configured_path("PRAMANA_VECTOR_INDEX_DIR", ".pramana/index")
+MAX_UPLOAD_FILE_BYTES = 2 * 1024 * 1024
+MAX_UPLOAD_FILES = 5
+UPLOAD_RATE_LIMIT = 5
+UPLOAD_RATE_WINDOW_SECONDS = 60

@@ -1,0 +1,108 @@
+{
+  "name": "pramana-chatbot",
+  "displayName": "Pramana",
+  "description": "Evidence-grounded local AI with Ollama, Gemini, OpenAI, document uploads, and FAISS retrieval.",
+  "version": "0.1.0",
+  "publisher": "santoshmaher",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SANTOSHMAHER/Pramana.git"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "AI",
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:pramana.openChat",
+    "onCommand:pramana.configure",
+    "onCommand:pramana.stopServer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pramana.openChat",
+        "title": "Pramana: Open Chat"
+      },
+      {
+        "command": "pramana.configure",
+        "title": "Pramana: Configure Providers"
+      },
+      {
+        "command": "pramana.stopServer",
+        "title": "Pramana: Stop Local Server"
+      }
+    ],
+    "configuration": {
+      "title": "Pramana",
+      "properties": {
+        "pramana.pythonPath": {
+          "type": "string",
+          "default": "py",
+          "description": "Python launcher or interpreter with Python 3.14 available."
+        },
+        "pramana.port": {
+          "type": "number",
+          "default": 5031,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Local port used by the bundled Pramana backend."
+        },
+        "pramana.defaultProvider": {
+          "type": "string",
+          "enum": [
+            "ollama",
+            "gemini",
+            "openai"
+          ],
+          "default": "ollama",
+          "description": "Default chat model provider."
+        },
+        "pramana.ollamaUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "Ollama server URL."
+        },
+        "pramana.ollamaModel": {
+          "type": "string",
+          "default": "qwen2.5:1.5b",
+          "description": "Ollama chat model."
+        },
+        "pramana.embeddingModel": {
+          "type": "string",
+          "default": "all-minilm",
+          "description": "Ollama embedding model used by FAISS retrieval."
+        },
+        "pramana.geminiModel": {
+          "type": "string",
+          "default": "gemini-2.5-flash",
+          "description": "Google Gemini model name."
+        },
+        "pramana.openaiModel": {
+          "type": "string",
+          "default": "gpt-4.1-mini",
+          "description": "OpenAI GPT model name."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "node scripts/package-backend.js && npm run compile && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^4.1.0",
+    "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "minimatch": "11.0.5"
+  }
+}

@@ -7,8 +7,9 @@ it, and how to update it without introducing unsupported answers.
 
 | File | Purpose | Runtime behavior |
 |---|---|---|
-| `database/test.json` | Curated FAQ used by the current chatbot | Used for exact answers and semantic retrieval, including curated local information |
+| `database/test.json` | Curated FAQ source | Used for exact answers; patterns are embedded into the local FAISS retrieval index |
 | `database/data_address.json` | Older FAQ collection plus the verified local directory | General FAQ intents may be retrieved. Legacy local intents remain excluded; only entries in `verified_local_listings` with official source metadata are used for local answers |
+| `.pramana/index/` | Generated vector index and document metadata | FAISS index; generated locally and excluded from version control |
 
 Despite its name, `test.json` is the current curated runtime FAQ, not a test
 results file. `data_address.json` also contains general technology, Python,
@@ -112,8 +113,9 @@ or edited records.
    local facts to legacy FAQ intents and expect the runtime to answer them.
 5. Use JSON double quotes, escape embedded quotes, and check commas and closing
    brackets carefully. Keep the UTF-8 encoding.
-6. Restart `python app.py` after saving changes. The in-memory answer and
-   embedding indexes are built when the app starts.
+6. Restart `python app.py` after saving changes. Exact-match indexes are built
+   at startup, and new FAQ vectors are embedded and persisted at the first
+   semantic retrieval.
 7. Run the test suite:
 
    ```bat
@@ -130,15 +132,16 @@ or edited records.
 2. The input and stored patterns are normalized for Unicode, letter case, and
    punctuation. Exact curated matches return their stored, non-template
    responses.
-3. If there is no exact answer, the app embeds the question with Ollama's
-   `all-minilm` model, ranks stored question patterns by cosine similarity, and
-   selects up to four entries. For a short follow-up, recent user questions
-   are combined with it for retrieval so unresolved references remain attached
-   to the current topic.
-4. The selected questions and answers, plus validated conversation history,
-   are passed to Ollama's
-   `qwen2.5:1.5b` model as FAQ context for a composed answer. Duplicate
-   responses are consolidated when selecting retrieval results.
+3. If there is no exact answer, Ollama embeds the question with the configured
+   embedding model (default `all-minilm`) and FAISS ranks FAQ patterns and
+   uploaded-document chunks. For a short follow-up, recent user questions are
+   combined with it for retrieval. Uploaded chunks retain their document ID,
+   filename, and page/slide/sheet location.
+4. The selected facts, plus validated conversation history, are passed to the
+   selected chat provider: local Ollama, Google Gemini, or OpenAI GPT. Online
+   providers receive the question, conversation history, and retrieved context.
+   API keys remain local in `.env`, or in VS Code SecretStorage when using the
+   extension.
 5. Verified local listings in `data_address.json` are available for exact and
    semantic matching, with their official source and verification date
    included in the retrieved context. Unverified legacy local intents remain
@@ -148,11 +151,14 @@ or edited records.
    model's general knowledge. Those answers are generated, not verified by
    the FAQ.
 
-Changing the FAQ updates what is retrieved; it does not train or fine-tune the
-Qwen model. The first semantic request after a server restart builds the
-in-memory vectors for question patterns. A missing Ollama service or model is
-reported as a service error rather than silently returning an unrelated
-answer.
+Changing the FAQ updates what is retrieved; it does not train or fine-tune a
+chat model. New FAQ patterns are embedded into the persistent FAISS index on
+the next semantic request. Uploaded documents are limited to five per request
+and 2 MB per file, extracted/chunked in background jobs, and rate-limited to
+five upload requests per minute. Changing the embedding model requires
+removing the configured vector-index directory before rebuilding. A missing
+Ollama embedding service or configured chat provider is reported explicitly
+rather than silently returning an unrelated answer.
 
 ## Current data observations
 

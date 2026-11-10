@@ -1,1 +1,9 @@
 Flask>=3,<4
+faiss-cpu>=1.12,<2
+Pillow>=11,<13
+pypdf>=5,<7
+python-docx>=1.1,<2
+python-pptx>=1.0,<2
+openpyxl>=3.1,<4
+xlrd>=2,<3
+pytesseract>=0.3.13,<1

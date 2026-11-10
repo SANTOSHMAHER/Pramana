@@ -3,3 +3,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pramana/
+node_modules/
+dist/
+*.vsix
+vscode-extension/backend/

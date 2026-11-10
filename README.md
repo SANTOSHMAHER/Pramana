@@ -1,4 +1,4 @@
-# Pramana Local AI Chatbot
+# Pramana
 
 Pramana is a local Flask chatbot for Python 3.14.3. Its name is inspired by
 *pramāṇa*, a Sanskrit philosophical term for a valid means of knowledge. The
@@ -38,10 +38,10 @@ or relative to this project folder. Use forward slashes or escaped backslashes
 for absolute paths, for example:
 
 ```dotenv
-GARI_FAQ_DATA_PATH=C:/Chatbot/data/test.json
-GARI_LOCAL_DATA_PATH=C:/Chatbot/data/data_address.json
-GARI_OLLAMA_URL=http://127.0.0.1:11434
-GARI_PORT=5001
+PRAMANA_FAQ_DATA_PATH=C:/Chatbot/data/test.json
+PRAMANA_LOCAL_DATA_PATH=C:/Chatbot/data/data_address.json
+PRAMANA_OLLAMA_URL=http://127.0.0.1:11434
+PRAMANA_PORT=5001
 ```
 
 `.env` is local configuration and is excluded from version control. The
@@ -51,15 +51,15 @@ in `.env`.
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `GARI_FAQ_DATA_PATH` | `database/test.json` | FAQ JSON path |
-| `GARI_LOCAL_DATA_PATH` | `database/data_address.json` | Legacy FAQ and verified local listings path |
-| `GARI_OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama server URL |
-| `GARI_CHAT_MODEL` | `qwen2.5:1.5b` | Ollama response model |
-| `GARI_EMBEDDING_MODEL` | `all-minilm` | Ollama embedding model |
-| `GARI_OLLAMA_TIMEOUT` | `120` | Ollama request timeout in seconds |
-| `GARI_HOST` / `GARI_PORT` | `127.0.0.1` / `5001` | Flask bind address |
-| `GARI_BOT_NAME` | `Pramana` | Name shown in the UI and model instructions |
-| `GARI_BOT_TAGLINE` | `Evidence-grounded local AI` | Bot description shown in the UI |
+| `PRAMANA_FAQ_DATA_PATH` | `database/test.json` | FAQ JSON path |
+| `PRAMANA_LOCAL_DATA_PATH` | `database/data_address.json` | Legacy FAQ and verified local listings path |
+| `PRAMANA_OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama server URL |
+| `PRAMANA_CHAT_MODEL` | `qwen2.5:1.5b` | Ollama response model |
+| `PRAMANA_EMBEDDING_MODEL` | `all-minilm` | Ollama embedding model |
+| `PRAMANA_OLLAMA_TIMEOUT` | `120` | Ollama request timeout in seconds |
+| `PRAMANA_HOST` / `PRAMANA_PORT` | `127.0.0.1` / `5001` | Flask bind address |
+| `PRAMANA_BOT_NAME` | `Pramana` | Name shown in the UI and model instructions |
+| `PRAMANA_BOT_TAGLINE` | `Evidence-grounded local AI` | Bot description shown in the UI |
 
 Open [http://127.0.0.1:5001](http://127.0.0.1:5001) (or the configured port).
 To stop the server, press Ctrl+C in its terminal. Keep Ollama running while

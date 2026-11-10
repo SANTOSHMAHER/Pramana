@@ -35,15 +35,15 @@ def configured_path(setting, default):
 
 load_env_file()
 
-FAQ_DATA_PATH = configured_path("GARI_FAQ_DATA_PATH", "database/test.json")
+FAQ_DATA_PATH = configured_path("PRAMANA_FAQ_DATA_PATH", "database/test.json")
 LOCAL_DATA_PATH = configured_path(
-    "GARI_LOCAL_DATA_PATH", "database/data_address.json"
+    "PRAMANA_LOCAL_DATA_PATH", "database/data_address.json"
 )
-OLLAMA_URL = os.environ.get("GARI_OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
-CHAT_MODEL = os.environ.get("GARI_CHAT_MODEL", "qwen2.5:1.5b")
-EMBEDDING_MODEL = os.environ.get("GARI_EMBEDDING_MODEL", "all-minilm")
-OLLAMA_TIMEOUT = int(os.environ.get("GARI_OLLAMA_TIMEOUT", "120"))
-APP_HOST = os.environ.get("GARI_HOST", "127.0.0.1")
-APP_PORT = int(os.environ.get("GARI_PORT", "5001"))
-BOT_NAME = os.environ.get("GARI_BOT_NAME", "Pramana")
-BOT_TAGLINE = os.environ.get("GARI_BOT_TAGLINE", "Evidence-grounded local AI")
+OLLAMA_URL = os.environ.get("PRAMANA_OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
+CHAT_MODEL = os.environ.get("PRAMANA_CHAT_MODEL", "qwen2.5:1.5b")
+EMBEDDING_MODEL = os.environ.get("PRAMANA_EMBEDDING_MODEL", "all-minilm")
+OLLAMA_TIMEOUT = int(os.environ.get("PRAMANA_OLLAMA_TIMEOUT", "120"))
+APP_HOST = os.environ.get("PRAMANA_HOST", "127.0.0.1")
+APP_PORT = int(os.environ.get("PRAMANA_PORT", "5001"))
+BOT_NAME = os.environ.get("PRAMANA_BOT_NAME", "Pramana")
+BOT_TAGLINE = os.environ.get("PRAMANA_BOT_TAGLINE", "Evidence-grounded local AI")

@@ -20,7 +20,7 @@ class ChatbotRouteTests(unittest.TestCase):
         self.assertIn(b"id=\"user-input-text\"", response.data)
         self.assertIn(b"data-prompt", response.data)
         self.assertIn(b"aria-live=\"polite\"", response.data)
-        self.assertIn(b"gari-current-conversation", response.data)
+        self.assertIn(b"pramana-current-conversation", response.data)
         self.assertIn(config.BOT_NAME.encode(), response.data)
         self.assertIn(config.BOT_TAGLINE.encode(), response.data)
         self.assertIn(
@@ -30,12 +30,12 @@ class ChatbotRouteTests(unittest.TestCase):
 
     def test_configured_paths_support_project_relative_and_absolute_values(self):
         relative = config.configured_path(
-            "GARI_TEST_PATH", "database/test.json"
+            "PRAMANA_TEST_PATH", "database/test.json"
         )
         absolute_path = Path(self.id()).resolve()
-        with patch.dict(os.environ, {"GARI_TEST_PATH": str(absolute_path)}):
+        with patch.dict(os.environ, {"PRAMANA_TEST_PATH": str(absolute_path)}):
             absolute = config.configured_path(
-                "GARI_TEST_PATH", "database/test.json"
+                "PRAMANA_TEST_PATH", "database/test.json"
             )
 
         self.assertEqual(relative, config.PROJECT_DIR / "database" / "test.json")
